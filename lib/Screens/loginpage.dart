@@ -1,12 +1,21 @@
+import 'package:cargo_tracking/Screens/registrationpage.dart';
 import 'package:cargo_tracking/brand_colors.dart';
 import 'package:flutter/material.dart';
 
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  static const String id = 'login';
   const LoginPage({Key? key}) : super(key: key);
 
   @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  TextEditingController email = TextEditingController();
+  @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -31,9 +40,10 @@ class LoginPage extends StatelessWidget {
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children:  <Widget> [
-                      const TextField(
+                       TextField(
+                         controller: email,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                             labelText: 'Email Address',
                             labelStyle: TextStyle(
                               fontSize: 14.0,
@@ -43,7 +53,7 @@ class LoginPage extends StatelessWidget {
                               fontSize: 10.0,
                             )
                         ),
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 10,),
                       const TextField(
@@ -60,7 +70,7 @@ class LoginPage extends StatelessWidget {
                         ),
                         style: TextStyle(fontSize: 14),
                       ),
-                      SizedBox(height: 40,),
+                      const SizedBox(height: 40,),
                         RaisedButton(
                           onPressed: (){},
                         shape: RoundedRectangleBorder(
@@ -82,7 +92,9 @@ class LoginPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                FlatButton(onPressed: (){},
+                FlatButton(onPressed: (){
+                  Navigator.pushNamedAndRemoveUntil(context, RegistrationPage.id, (route) => false);
+                },
                     child:const Text('Don\'t have an account,Sign up here'),
                 )
 

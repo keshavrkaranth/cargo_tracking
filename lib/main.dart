@@ -1,12 +1,14 @@
 import 'package:cargo_tracking/Screens/loginpage.dart';
 import 'package:cargo_tracking/Screens/mainpage.dart';
+import 'package:cargo_tracking/Screens/registrationpage.dart';
+import 'package:cargo_tracking/Screens/startingpage.dart';
+import 'package:cargo_tracking/provider/google_sign_in.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:cargo_tracking/main.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
-
-
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,27 +23,30 @@ Future<void> main() async {
     ),
   );
 
-
-
   runApp(const MyApp());
 }
-
-
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        fontFamily: 'Brand-Regular',
-        primarySwatch: Colors.blue,
-      ),
-      home: const LoginPage(),
-    );
-  }
+  Widget build(BuildContext context) => ChangeNotifierProvider(
+        create: (context) => GoogleSignInProvider(),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            fontFamily: 'Brand-Regular',
+            primarySwatch: Colors.blue,
+          ),
+          initialRoute: InitialPage.id,
+          routes: {
+            RegistrationPage.id: (context) =>  RegistrationPage(),
+            LoginPage.id: (context) => const LoginPage(),
+            MainPage.id: (context) => const MainPage(),
+            InitialPage.id: (context) => const InitialPage()
+          },
+        ),
+      );
 }
-
