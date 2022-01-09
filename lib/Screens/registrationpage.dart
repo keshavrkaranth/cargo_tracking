@@ -1,6 +1,10 @@
 import 'package:cargo_tracking/Screens/loginpage.dart';
-import 'package:cargo_tracking/provider/google_sign_in.dart';
+import 'package:cargo_tracking/Screens/mainpage.dart';
+import 'package:cargo_tracking/widgets/ProgressDialog.dart';
+import 'package:connectivity/connectivity.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,8 +12,18 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../brand_colors.dart';
 
-class RegistrationPage extends StatelessWidget {
+class RegistrationPage extends StatefulWidget {
+  static const String id = 'register';
+
+  RegistrationPage({Key? key}) : super(key: key);
+
+  @override
+  State<RegistrationPage> createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+
   void showSnackBar(String title){
     final snackbar = SnackBar(
       content:Text(title,textAlign: TextAlign.center,style: const TextStyle(fontSize: 15),),
@@ -17,24 +31,37 @@ class RegistrationPage extends StatelessWidget {
     scaffoldKey.currentState?.showSnackBar(snackbar);
   }
 
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  static const String id = 'register';
+
   var fullNameController = TextEditingController();
+
   var phoneController = TextEditingController();
+
   var emailController = TextEditingController();
+
   var passwordController = TextEditingController();
-  RegistrationPage({Key? key}) : super(key: key);
 
   void registerUser() async{
-
+    showDialog(context: context,
+        builder: (BuildContext context)=> const ProgressDialog(status: 'Registering You..'));
     final User? user = (await _auth.createUserWithEmailAndPassword(
       email:emailController.text,
       password:passwordController.text
-    )).user;
+    ).catchError((ex){
+      Navigator.pop(context);
+      showSnackBar(ex.message.toString());
+    })).user;
+    Navigator.pop(context);
 
     if (user!=null){
-      print("Reg sucessfull");
+      DatabaseReference newUserRef = FirebaseDatabase.instance.reference().child('users/${user.uid}');
+      Map userMap = {
+        'fullname':fullNameController.text,
+        'email':emailController.text,
+        'phone':phoneController.text
+      };
+      newUserRef.set(userMap);
+      Navigator.pushNamedAndRemoveUntil(context, MainPage.id, (route) => false);
     }
   }
 
@@ -124,23 +151,38 @@ class RegistrationPage extends StatelessWidget {
                               fontSize: 10.0,
                             )
                         ),
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 40,),
                       RaisedButton(
-                        onPressed: (){
+                        onPressed: () async{
 
+                          // check for internet connectivity
+                          var connectivityRes = await Connectivity().checkConnectivity();
+                          if(connectivityRes!=ConnectivityResult.mobile && connectivityRes !=ConnectivityResult.wifi){
+                            showSnackBar('No Internet Connection');
+                            return;
+                          }
 
+                            //name validation
                           if(fullNameController.text.isEmpty){
                             showSnackBar("Name is Required");
                             return;
                           }
+                          // email validation
                           if (!emailController.text.contains('@')){
                             showSnackBar("Enter Proper Email");
                             return;
                           }
+                          // phone number validation
                           if (phoneController.text.length<10 ||phoneController.text.length>10 ){
                             showSnackBar("Check your Phone number");
+                            return;
+                          }
+
+                          // password validation
+                          if(passwordController.text.length<6){
+                            showSnackBar('Password Should be minimum 6 characters long!');
                             return;
                           }
 
@@ -163,29 +205,6 @@ class RegistrationPage extends StatelessWidget {
 
                       ),
                       const SizedBox(height: 40,),
-                      RaisedButton(
-                        onPressed: (){
-                          final provider = Provider.of<GoogleSignInProvider>(context,listen: false);
-                          provider.googleLogin();
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        color: BrandColors.colorGreen,
-                        textColor: Colors.white,
-                        child: const SizedBox(
-                          height: 50,
-                          child: Center(
-                            child: Text(
-                              'Sign up with Google',
-                              style: TextStyle(fontSize: 18,fontFamily: 'Brand-Bold'),
-                            ),
-
-                          ),
-                        ),
-
-                      ),
-
                     ],
                   ),
                 ),

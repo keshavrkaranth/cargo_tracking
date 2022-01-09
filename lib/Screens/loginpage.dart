@@ -1,6 +1,13 @@
+import 'package:cargo_tracking/Screens/mainpage.dart';
 import 'package:cargo_tracking/Screens/registrationpage.dart';
 import 'package:cargo_tracking/brand_colors.dart';
+import 'package:cargo_tracking/widgets/ProgressDialog.dart';
+import 'package:connectivity/connectivity.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -12,11 +19,39 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  TextEditingController email = TextEditingController();
+  var emailController = TextEditingController();
+  var passwordController = TextEditingController();
+  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  void showSnackBar(String title){
+    final snackbar = SnackBar(
+      content:Text(title,textAlign: TextAlign.center,style: const TextStyle(fontSize: 15),),
+    );
+    scaffoldKey.currentState?.showSnackBar(snackbar);
+  }
+
+
+  void login() async{
+
+    // show dialog
+    showDialog(context: context,
+        builder: (BuildContext context)=> const ProgressDialog(status: 'Logging you in'));
+    try{
+      await _auth.signInWithEmailAndPassword(
+          email: emailController.text, password: passwordController.text);
+      Navigator.pop(context);
+      Navigator.pushNamedAndRemoveUntil(context, MainPage.id, (route) => false);
+    }on FirebaseAuthException catch(e){
+      Navigator.pop(context);
+     showSnackBar(e.message.toString());
+    }
+}
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
+      key: scaffoldKey,
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -41,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children:  <Widget> [
                        TextField(
-                         controller: email,
+                         controller: emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
                             labelText: 'Email Address',
@@ -56,9 +91,10 @@ class _LoginPageState extends State<LoginPage> {
                         style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 10,),
-                      const TextField(
+                       TextField(
+                        controller: passwordController,
                         obscureText: true,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                             labelText: 'Password',
                             labelStyle: TextStyle(
                               fontSize: 14.0,
@@ -68,11 +104,33 @@ class _LoginPageState extends State<LoginPage> {
                               fontSize: 10.0,
                             )
                         ),
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 40,),
                         RaisedButton(
-                          onPressed: (){},
+                          onPressed: () async{
+                            // check for internet connectivity
+                            var connectivityRes = await Connectivity().checkConnectivity();
+                            if(connectivityRes!=ConnectivityResult.mobile && connectivityRes !=ConnectivityResult.wifi){
+                              showSnackBar('No Internet Connection');
+                              return;
+                            }
+
+
+                            if (!emailController.text.contains('@')){
+                              showSnackBar("Enter Proper Email");
+                              return;
+                            }
+
+
+                            // password validation
+                            if(passwordController.text.length<6){
+                              showSnackBar('Password Should be minimum 6 characters long!');
+                              return;
+                            }
+                            login();
+
+                          },
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),
