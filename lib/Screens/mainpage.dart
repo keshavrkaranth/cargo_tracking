@@ -1,32 +1,18 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
-class MainPage extends StatefulWidget {
+class MainPage extends StatelessWidget {
+  static const String id = 'main';
   const MainPage({Key? key}) : super(key: key);
 
-  @override
-  _MainPageState createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Main Page'),
+        title: const Text('Cargo Tracking'),
       ),
-      body: Center(
-        child: MaterialButton(
-          height: 50,
-          minWidth: 300,
-          color: Colors.green,
-          child: const Text("Test Connection"),
-          onPressed:(){
-            DatabaseReference db = FirebaseDatabase.instance.reference().child('Test');
-                db.set('IsConnected');
-          },
-        ),
-      )
+      body: const Center(
+        child: Text("welcome to Cargo Tracking"),
+      ),
     );
   }
 }
