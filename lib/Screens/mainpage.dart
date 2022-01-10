@@ -19,15 +19,14 @@ class _MainPageState extends State<MainPage> {
   late GoogleMapController mapController;
 
   var geoLocator = Geolocator();
-  late Position currentPositin;
+  late Position currentPosition;
 
   void setupPositionLocator() async{
     print("bojja");
-    LocationPermission permission;
-    permission = await Geolocator.requestPermission();
+    LocationPermission permission = await Geolocator.requestPermission();
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
-    currentPositin = position;
-    print("Position:${position}");
+    currentPosition = position;
+    print("Position:$position");
     LatLng pos = LatLng(position.latitude, position.longitude);
     CameraPosition cp = CameraPosition(target: pos,zoom: 14);
     mapController.animateCamera(CameraUpdate.newCameraPosition(cp));
