@@ -23,8 +23,11 @@ class _MainPageState extends State<MainPage> {
 
   void setupPositionLocator() async{
     print("bojja");
+    LocationPermission permission;
+    permission = await Geolocator.requestPermission();
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
     currentPositin = position;
+    print("Position:${position}");
     LatLng pos = LatLng(position.latitude, position.longitude);
     CameraPosition cp = CameraPosition(target: pos,zoom: 14);
     mapController.animateCamera(CameraUpdate.newCameraPosition(cp));
@@ -42,9 +45,8 @@ class _MainPageState extends State<MainPage> {
       body: Stack(
         children:<Widget> [
           GoogleMap(
-            initialCameraPosition: _kGooglePlex,
+          initialCameraPosition: _kGooglePlex,
           myLocationEnabled: true,
-
           zoomGesturesEnabled: true,
           mapType: MapType.normal,
           myLocationButtonEnabled: true,
