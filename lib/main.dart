@@ -2,6 +2,7 @@ import 'package:cargo_tracking/Screens/loginpage.dart';
 import 'package:cargo_tracking/Screens/mainpage.dart';
 import 'package:cargo_tracking/Screens/registrationpage.dart';
 import 'package:cargo_tracking/Screens/startingpage.dart';
+import 'package:cargo_tracking/dataprovider/appdata.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -31,20 +32,23 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Flutter Demo',
-          theme: ThemeData(
-            fontFamily: 'Brand-Regular',
-            primarySwatch: Colors.blue,
+        return ChangeNotifierProvider(
+          create: (context) => AppData(),
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Flutter Demo',
+            theme: ThemeData(
+              fontFamily: 'Brand-Regular',
+              primarySwatch: Colors.blue,
+            ),
+            initialRoute: MainPage.id,
+            routes: {
+              RegistrationPage.id: (context) =>  RegistrationPage(),
+              LoginPage.id: (context) => const LoginPage(),
+              MainPage.id: (context) =>  MainPage(),
+              InitialPage.id: (context) => const InitialPage()
+            },
           ),
-          initialRoute: MainPage  .id,
-          routes: {
-            RegistrationPage.id: (context) =>  RegistrationPage(),
-            LoginPage.id: (context) => const LoginPage(),
-            MainPage.id: (context) =>  MainPage(),
-            InitialPage.id: (context) => const InitialPage()
-          },
         );
 }
 }
