@@ -17,7 +17,7 @@ Future<void> main() async {
       apiKey: 'AIzaSyDesMubxml8BIY1XrmziNdS6y6cNGoFBTs',
       appId: '1:514277127247:android:83404ef68d2e034c66663a',
       messagingSenderId: '448618578101',
-      projectId: 'react-native-firebase-testing',
+      projectId: 'cargo-tracking-815a8',
       databaseURL: 'https://cargo-tracking-815a8-default-rtdb.firebaseio.com',
       storageBucket: 'cargo-tracking-815a8.appspot.com',
     ),

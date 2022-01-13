@@ -13,11 +13,9 @@ import 'package:flutter/services.dart';
 
 import 'package:provider/provider.dart';
 
-
 class MainPage extends StatefulWidget {
   static const String id = 'main';
   MainPage({Key? key}) : super(key: key);
-
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -26,25 +24,25 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   final Completer<GoogleMapController> _controller = Completer();
   double mapBottomPadding = 0;
-  double searchSheetHeight = (Platform.isIOS) ? 300 :275;
+  double searchSheetHeight = (Platform.isIOS) ? 300 : 275;
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-
 
   late GoogleMapController mapController;
 
   var geoLocator = Geolocator();
   late Position currentPosition;
 
-  void setupPositionLocator() async{
+  Future<void> setupPositionLocator() async {
     print("IN VOID");
     LocationPermission permission = await Geolocator.requestPermission();
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.bestForNavigation);
     currentPosition = position;
     LatLng pos = LatLng(position.latitude, position.longitude);
-    CameraPosition cp = CameraPosition(target: pos,zoom: 14);
+    CameraPosition cp = CameraPosition(target: pos, zoom: 14);
     mapController.animateCamera(CameraUpdate.newCameraPosition(cp));
-    String address = await HelperMethods.findCordinateAddress(position,context);
-    print("Address:${address}");
+    String address =
+        await HelperMethods.findCordinateAddress(position, context);
   }
 
   static const CameraPosition _kGooglePlex = CameraPosition(
@@ -52,140 +50,181 @@ class _MainPageState extends State<MainPage> {
     zoom: 14.4746,
   );
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: scaffoldKey,
-      drawer: Container(
-        width: 250,
-        color: Colors.white,
-        // navigation drawer
-        child: Drawer(
-          child: ListView(
-            padding: const EdgeInsets.all(0),
-            children:<Widget> [
-              Container(
-                color: Colors.white,
-                height: 160,
-                child: DrawerHeader(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                  ),
-                  child: Row(
-                    children:<Widget> [
-                              Image.asset('images/user_icon.png',height: 60,width: 60,),
-                      const SizedBox(width: 15,),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children:const <Widget> [
-                          Text('Keshav',style: TextStyle(fontSize: 20,fontFamily:'Brand-Bold'),),
-                          SizedBox(height: 5,),
-                          Text('View Profile'),
-                        ],
-                      )
-                    ],
+        key: scaffoldKey,
+        drawer: Container(
+          width: 250,
+          color: Colors.white,
+          // navigation drawer
+          child: Drawer(
+            child: ListView(
+              padding: const EdgeInsets.all(0),
+              children: <Widget>[
+                Container(
+                  color: Colors.white,
+                  height: 160,
+                  child: DrawerHeader(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        Image.asset(
+                          'images/user_icon.png',
+                          height: 60,
+                          width: 60,
+                        ),
+                        const SizedBox(
+                          width: 15,
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const <Widget>[
+                            Text(
+                              'Keshav',
+                              style: TextStyle(
+                                  fontSize: 20, fontFamily: 'Brand-Bold'),
+                            ),
+                            SizedBox(
+                              height: 5,
+                            ),
+                            Text('View Profile'),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const BrandDivider(),
-              const SizedBox(height: 10,),
-              const ListTile(
-                leading: Icon(Icons.navigation),
-                title: Text('Add a navigation',style: kDrawerItemStyle,),
-              ),
-              const ListTile(
-                leading: Icon(Icons.history),
-                title: Text('Navigation History',style: kDrawerItemStyle,),
-              ),
-              const ListTile(
-                leading: Icon(Icons.contact_support),
-                title: Text('Support',style: kDrawerItemStyle,),
-              ),
-              const ListTile(
-                leading: Icon(Icons.info),
-                title: Text('About',style: kDrawerItemStyle,),
-              ),
-            ],
+                const BrandDivider(),
+                const SizedBox(
+                  height: 10,
+                ),
+                const ListTile(
+                  leading: Icon(Icons.navigation),
+                  title: Text(
+                    'Add a navigation',
+                    style: kDrawerItemStyle,
+                  ),
+                ),
+                const ListTile(
+                  leading: Icon(Icons.history),
+                  title: Text(
+                    'Navigation History',
+                    style: kDrawerItemStyle,
+                  ),
+                ),
+                const ListTile(
+                  leading: Icon(Icons.contact_support),
+                  title: Text(
+                    'Support',
+                    style: kDrawerItemStyle,
+                  ),
+                ),
+                const ListTile(
+                  leading: Icon(Icons.info),
+                  title: Text(
+                    'About',
+                    style: kDrawerItemStyle,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      body: Stack(
-        children:<Widget> [
-          GoogleMap(
-          padding: EdgeInsets.only(bottom: mapBottomPadding),
-          initialCameraPosition: _kGooglePlex,
-          myLocationEnabled: true,
-          zoomGesturesEnabled: true,
-          mapType: MapType.normal,
-          myLocationButtonEnabled: true,
-            onMapCreated: (GoogleMapController controller){
-              _controller.complete(controller);
-              mapController=controller;
+        body: Stack(
+          children: <Widget>[
+            GoogleMap(
+              padding: EdgeInsets.only(bottom: mapBottomPadding),
+              initialCameraPosition: _kGooglePlex,
+              myLocationEnabled: true,
+              zoomGesturesEnabled: true,
+              mapType: MapType.normal,
+              myLocationButtonEnabled: true,
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+                mapController = controller;
 
-              setState(() {
-                mapBottomPadding = (Platform.isAndroid) ? 280 : 270;
-              });
-              setupPositionLocator();
-
-            },
-          ),
-          // menu button
-          Positioned(
-            top: 44,
-            left: 20,
-            child: GestureDetector(
-              onTap: (){
-                scaffoldKey.currentState?.openDrawer();
+                setState(() {
+                  mapBottomPadding = (Platform.isAndroid) ? 280 : 270;
+                });
+                setupPositionLocator();
               },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 5.0,
-                      spreadRadius: 0.5,
-                      offset: Offset(
-                        0.7,
-                        0.7,
-                      )
+            ),
+            // menu button
+            Positioned(
+              top: 44,
+              left: 20,
+              child: GestureDetector(
+                onTap: () {
+                  scaffoldKey.currentState?.openDrawer();
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: const [
+                        BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 5.0,
+                            spreadRadius: 0.5,
+                            offset: Offset(
+                              0.7,
+                              0.7,
+                            )),
+                      ]),
+                  child: const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 20,
+                    child: Icon(
+                      Icons.menu,
+                      color: Colors.black87,
                     ),
-                  ]
-                ),
-                child: const CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 20,
-                  child: Icon(Icons.menu,color: Colors.black87,),
+                  ),
                 ),
               ),
             ),
-          ),
-          // search sheet
-          Positioned(
-            left: 0,
+            // search sheet
+            Positioned(
+              left: 0,
               right: 0,
               bottom: 0,
-
-              child:Container(
+              child: Container(
                 height: searchSheetHeight,
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(15),topRight: Radius.circular(15)),
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15)),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24,vertical: 18),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget> [
-                      const SizedBox(height: 5,),
-                      const Text('Nice to see you!',style: TextStyle(fontSize: 10),),
-                      const Text('Where are you going?',style: TextStyle(fontSize: 18,fontFamily: 'Brand-Bold'),),
-                      const SizedBox(height: 20,),
+                    children: <Widget>[
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      const Text(
+                        'Nice to see you!',
+                        style: TextStyle(fontSize: 10),
+                      ),
+                      const Text(
+                        'Where are you going?',
+                        style:
+                            TextStyle(fontSize: 18, fontFamily: 'Brand-Bold'),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
                       GestureDetector(
-                        onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>const SearchPage()));
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SearchPage()));
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -196,69 +235,94 @@ class _MainPageState extends State<MainPage> {
                                   color: Colors.black12,
                                   blurRadius: 5.0,
                                   spreadRadius: 0.5,
-                                  offset: Offset(
-                                      0.7,
-                                      0.7
-                                  ),
+                                  offset: Offset(0.7, 0.7),
                                 )
-                              ]
-                          ),
-                          child:  Padding(
+                              ]),
+                          child: Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: Row(
-                              children: const <Widget> [
-                                Icon(Icons.search,color: Colors.blueAccent,),
-                                SizedBox(width: 10,),
+                              children: const <Widget>[
+                                Icon(
+                                  Icons.search,
+                                  color: Colors.blueAccent,
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
                                 Text('Search destination'),
                               ],
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 22,),
+                      const SizedBox(
+                        height: 22,
+                      ),
                       Row(
-                        children:  <Widget>[
-                          const Icon(Icons.home,color: BrandColors.colorDimText,),
-                          const SizedBox(width: 12,),
+                        children: <Widget>[
+                          const Icon(
+                            Icons.home,
+                            color: BrandColors.colorDimText,
+                          ),
+                          const SizedBox(
+                            width: 12,
+                          ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children:  const <Widget> [
-                              Text('Add Home'),
-                              SizedBox(height: 3,),
-                              Text("Your residential address",style: TextStyle(fontSize: 11,color: BrandColors.colorDimText),),
+                            children:  <Widget>[
+                              Text((Provider.of<AppData>(context).pickupAddress !=null) ? Provider.of<AppData>(context,listen: false).pickupAddress.placeName :"Add Home"),
+                              const SizedBox(
+                                height: 3,
+                              ),
+                              const Text(
+                                "Your residential address",
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: BrandColors.colorDimText),
+                              ),
                             ],
                           )
                         ],
                       ),
-                      const SizedBox(height: 10,),
+                      const SizedBox(
+                        height: 10,
+                      ),
                       const BrandDivider(),
-                      const SizedBox(height: 16,),
+                      const SizedBox(
+                        height: 16,
+                      ),
                       Row(
-                        children:  <Widget>[
-                          const Icon(Icons.work,color: BrandColors.colorDimText,),
-                          const SizedBox(width: 12,),
+                        children: <Widget>[
+                          const Icon(
+                            Icons.work,
+                            color: BrandColors.colorDimText,
+                          ),
+                          const SizedBox(
+                            width: 12,
+                          ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children:const <Widget> [
+                            children: const <Widget>[
                               Text('Add Work'),
-                              SizedBox(height: 3,),
-                              Text("Your office address",style: TextStyle(fontSize: 11,color: BrandColors.colorDimText),),
+                              SizedBox(
+                                height: 3,
+                              ),
+                              Text(
+                                "Your office address",
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: BrandColors.colorDimText),
+                              ),
                             ],
                           )
                         ],
                       ),
-
-
                     ],
                   ),
                 ),
-
               ),
-          ),
-        ],
-      )
-    );
+            ),
+          ],
+        ));
   }
 }
-
-

@@ -15,7 +15,7 @@ class _SearchPageState extends State<SearchPage> {
   var destinationController = TextEditingController();
   var focusDestination = FocusNode();
 
-  
+
 
   @override
   Widget build(BuildContext context) {
