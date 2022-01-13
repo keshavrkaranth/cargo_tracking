@@ -22,6 +22,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  bool isLoading = false;
   final Completer<GoogleMapController> _controller = Completer();
   double mapBottomPadding = 0;
   double searchSheetHeight = (Platform.isIOS) ? 300 : 275;
@@ -33,26 +34,42 @@ class _MainPageState extends State<MainPage> {
   late Position currentPosition;
 
   Future<void> setupPositionLocator() async {
-    print("IN VOID");
+    setState(() {
+      isLoading = true;
+    });
     LocationPermission permission = await Geolocator.requestPermission();
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation);
-    currentPosition = position;
+    await HelperMethods.findCordinateAddress(position, context);
+    print("IN VOID");
+    setState(() {
+      currentPosition = position;
+    });
     LatLng pos = LatLng(position.latitude, position.longitude);
     CameraPosition cp = CameraPosition(target: pos, zoom: 14);
-    mapController.animateCamera(CameraUpdate.newCameraPosition(cp));
-    String address =
-        await HelperMethods.findCordinateAddress(position, context);
+    setState(() {
+      isLoading = false;
+    });
+
+
+    // mapController.animateCamera(CameraUpdate.newLatLng(LatLng(position.latitude, position.longitude)));
+
   }
 
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
-  );
+  // static CameraPosition _kGooglePlex = CameraPosition(
+  //   target: LatLng(currentPosition.latitude, -122.085749655962),
+  //   zoom: 14.4746,
+  // );
+
+  @override
+  void initState() {
+    super.initState();
+    setupPositionLocator();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return isLoading ? const Scaffold(body: Center(child: CircularProgressIndicator()),): Scaffold(
         key: scaffoldKey,
         drawer: Container(
           width: 250,
@@ -137,19 +154,24 @@ class _MainPageState extends State<MainPage> {
           children: <Widget>[
             GoogleMap(
               padding: EdgeInsets.only(bottom: mapBottomPadding),
-              initialCameraPosition: _kGooglePlex,
+              // initialCameraPosition: _kGooglePlex,
+              initialCameraPosition: CameraPosition(
+                target: LatLng(currentPosition.latitude, currentPosition.longitude),
+                zoom: 14.4746,
+              ),
               myLocationEnabled: true,
+              compassEnabled: true,
               zoomGesturesEnabled: true,
               mapType: MapType.normal,
               myLocationButtonEnabled: true,
               onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
                 mapController = controller;
+                _controller.complete(controller);
+
 
                 setState(() {
                   mapBottomPadding = (Platform.isAndroid) ? 280 : 270;
                 });
-                setupPositionLocator();
               },
             ),
             // menu button
@@ -270,7 +292,12 @@ class _MainPageState extends State<MainPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children:  <Widget>[
-                              Text((Provider.of<AppData>(context).pickupAddress !=null) ? Provider.of<AppData>(context,listen: false).pickupAddress.placeName :"Add Home"),
+                              Container(
+                                  width: MediaQuery.of(context).size.width * .75,
+                                  child: Text((Provider.of<AppData>(context).pickupAddress !=null) ? Provider.of<AppData>(context,listen: false).pickupAddress.placeName :"Add Home",
+                                  overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  )),
                               const SizedBox(
                                 height: 3,
                               ),
