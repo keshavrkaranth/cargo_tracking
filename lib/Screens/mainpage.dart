@@ -366,6 +366,6 @@ class _MainPageState extends State<MainPage> {
     var thisDetails = await HelperMethods.getDirectionsDetails(pickupLatLng, destinationLatLng);
     Navigator.pop(context);
     PolylinePoints polylinePoints = PolylinePoints();
-    List<PointLatLng> results = polylinePoints.decodePolyline(thisDetails?.encodedPoints);
+    List<PointLatLng> results = polylinePoints.decodePolyline(thisDetails!.encodedPoints);
   }
 }
