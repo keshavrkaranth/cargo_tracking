@@ -42,7 +42,7 @@ dependencies:
   google_maps_flutter: ^2.1.1
   http: ^0.13.4
   geolocator: ^8.0.1
-
+  flutter_polyline_points: ^1.0.0
 
 
 dev_dependencies:

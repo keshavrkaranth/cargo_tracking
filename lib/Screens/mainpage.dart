@@ -4,7 +4,9 @@ import 'package:cargo_tracking/dataprovider/appdata.dart';
 import 'package:cargo_tracking/helpers/helpermethods.dart';
 import 'package:cargo_tracking/styles/styles.dart';
 import 'package:cargo_tracking/widgets/BrandDivider.dart';
+import 'package:cargo_tracking/widgets/ProgressDialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
@@ -29,6 +31,8 @@ class _MainPageState extends State<MainPage> {
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   late GoogleMapController mapController;
+  List<LatLng> polyLineCoordinates = [];
+  Set<Polyline> polylines= {};
 
   var geoLocator = Geolocator();
   late Position currentPosition;
@@ -41,7 +45,6 @@ class _MainPageState extends State<MainPage> {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation);
     await HelperMethods.findCordinateAddress(position, context);
-    print("IN VOID");
     setState(() {
       currentPosition = position;
     });
@@ -52,15 +55,8 @@ class _MainPageState extends State<MainPage> {
     });
 
 
-    // mapController.animateCamera(CameraUpdate.newLatLng(LatLng(position.latitude, position.longitude)));
 
   }
-
-  // static CameraPosition _kGooglePlex = CameraPosition(
-  //   target: LatLng(currentPosition.latitude, -122.085749655962),
-  //   zoom: 14.4746,
-  // );
-
   @override
   void initState() {
     super.initState();
@@ -69,7 +65,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return isLoading ? const Scaffold(body: Center(child: CircularProgressIndicator()),): Scaffold(
+    return isLoading ? const ProgressDialog(status: 'Loading...'): Scaffold(
         key: scaffoldKey,
         drawer: Container(
           width: 250,
@@ -242,11 +238,14 @@ class _MainPageState extends State<MainPage> {
                         height: 20,
                       ),
                       GestureDetector(
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async{
+                          var response = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                   builder: (context) => const SearchPage()));
+                          if(response=='getDirection'){
+                            await getDirection();
+                          }
                         },
                         child: Container(
                           decoration: BoxDecoration(
@@ -351,5 +350,22 @@ class _MainPageState extends State<MainPage> {
             ),
           ],
         ));
+  }
+
+  Future<void> getDirection() async{
+    var pickup = Provider.of<AppData>(context,listen: false).pickupAddress;
+    var destination = Provider.of<AppData>(context,listen: false).destinationAddress;
+
+    var pickupLatLng = LatLng(pickup.latitude, pickup.longitude);
+    var destinationLatLng = LatLng(destination.latitude, destination.longitude);
+    showDialog(
+        context: context,
+        builder: (BuildContext context)=>const ProgressDialog(status: 'Please wait...'),
+      barrierDismissible: false
+    );
+    var thisDetails = await HelperMethods.getDirectionsDetails(pickupLatLng, destinationLatLng);
+    Navigator.pop(context);
+    PolylinePoints polylinePoints = PolylinePoints();
+    List<PointLatLng> results = polylinePoints.decodePolyline(thisDetails?.encodedPoints);
   }
 }
