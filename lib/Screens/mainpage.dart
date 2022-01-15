@@ -33,6 +33,8 @@ class _MainPageState extends State<MainPage> {
   late GoogleMapController mapController;
   List<LatLng> polyLineCoordinates = [];
   Set<Polyline> polylines= {};
+  Set<Marker> markers= {};
+  Set<Circle> circles= {};
 
   var geoLocator = Geolocator();
   late Position currentPosition;
@@ -61,6 +63,7 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     setupPositionLocator();
+    SystemChrome.setEnabledSystemUIOverlays([]);
   }
 
   @override
@@ -160,6 +163,9 @@ class _MainPageState extends State<MainPage> {
               zoomGesturesEnabled: true,
               mapType: MapType.normal,
               myLocationButtonEnabled: true,
+              polylines: polylines,
+              markers: markers,
+              circles:circles,
               onMapCreated: (GoogleMapController controller) {
                 mapController = controller;
                 _controller.complete(controller);
@@ -366,6 +372,85 @@ class _MainPageState extends State<MainPage> {
     var thisDetails = await HelperMethods.getDirectionsDetails(pickupLatLng, destinationLatLng);
     Navigator.pop(context);
     PolylinePoints polylinePoints = PolylinePoints();
-    List<PointLatLng> results = polylinePoints.decodePolyline(thisDetails?.encodedPoints);
+    List<PointLatLng> results = polylinePoints.decodePolyline(thisDetails!.encodedPoints);
+    polyLineCoordinates.clear();
+    if(results.isNotEmpty){
+      for (var point in results) {
+        polyLineCoordinates.add(LatLng(point.latitude, point.longitude)
+        );
+      }
+    }
+    polylines.clear();
+    setState(() {
+      Polyline polyline =  Polyline(
+        polylineId: const PolylineId('polyid'),
+        color: const Color.fromARGB(255, 95, 109, 237),
+        points: polyLineCoordinates,
+        jointType: JointType.round,
+        width: 4,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        geodesic: true,
+
+      );
+      polylines.add(polyline);
+    });
+    LatLngBounds bounds;
+    if(pickupLatLng.latitude>destinationLatLng.latitude && pickupLatLng.longitude > destinationLatLng.longitude){
+      bounds = LatLngBounds(southwest: destinationLatLng, northeast: pickupLatLng);
+    }
+    else if(pickupLatLng.longitude>destinationLatLng.longitude){
+      bounds = LatLngBounds(southwest: LatLng(pickupLatLng.latitude,destinationLatLng.longitude), northeast: LatLng(destinationLatLng.latitude,pickupLatLng.longitude));
+    }
+    else if(pickupLatLng.latitude >destinationLatLng.latitude){
+      bounds = LatLngBounds(southwest: LatLng(destinationLatLng.latitude,pickupLatLng.latitude),
+          northeast: LatLng(pickupLatLng.latitude,destinationLatLng.longitude));
+    }
+    else{
+      bounds = LatLngBounds(southwest: pickupLatLng,northeast: destinationLatLng);
+    }
+    mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 10));
+
+    Marker pickupMarker = Marker(
+      markerId: const MarkerId('pickup'),
+      position: pickupLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      infoWindow: InfoWindow(title: pickup.placeName,snippet: 'My location'),
+    );
+
+    Marker destinationMarker = Marker(
+      markerId: const MarkerId('pickup'),
+      position: destinationLatLng,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      infoWindow: InfoWindow(title: destination.placeName,snippet: 'Destination'),
+    );
+    setState(() {
+      markers.add(pickupMarker);
+      markers.add(destinationMarker);
+    });
+
+    Circle pickupCircle = Circle(
+      circleId: const CircleId('pickup'),
+      strokeColor: BrandColors.colorGreen,
+      strokeWidth: 3,
+      radius: 12,
+      center: pickupLatLng,
+      fillColor: BrandColors.colorGreen
+    );
+
+    Circle destinationCircle = Circle(
+        circleId: const CircleId('destination'),
+        strokeColor: BrandColors.colorAccentPurple,
+        strokeWidth: 3,
+        radius: 12,
+        center: destinationLatLng,
+        fillColor: BrandColors.colorAccentPurple
+    );
+
+   setState(() {
+     circles.add(pickupCircle);
+     circles.add(destinationCircle);
+   });
+
   }
 }
