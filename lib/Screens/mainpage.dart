@@ -32,9 +32,9 @@ class _MainPageState extends State<MainPage> {
 
   late GoogleMapController mapController;
   List<LatLng> polyLineCoordinates = [];
-  Set<Polyline> polylines= {};
-  Set<Marker> markers= {};
-  Set<Circle> circles= {};
+  Set<Polyline> polylines = {};
+  Set<Marker> markers = {};
+  Set<Circle> circles = {};
 
   var geoLocator = Geolocator();
   late Position currentPosition;
@@ -55,10 +55,8 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       isLoading = false;
     });
-
-
-
   }
+
   @override
   void initState() {
     super.initState();
@@ -68,321 +66,335 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return isLoading ? const ProgressDialog(status: 'Loading...'): Scaffold(
-        key: scaffoldKey,
-        drawer: Container(
-          width: 250,
-          color: Colors.white,
-          // navigation drawer
-          child: Drawer(
-            child: ListView(
-              padding: const EdgeInsets.all(0),
+    return isLoading
+        ? const ProgressDialog(status: 'Loading...')
+        : Scaffold(
+            key: scaffoldKey,
+            drawer: Container(
+              width: 250,
+              color: Colors.white,
+              // navigation drawer
+              child: Drawer(
+                child: ListView(
+                  padding: const EdgeInsets.all(0),
+                  children: <Widget>[
+                    Container(
+                      color: Colors.white,
+                      height: 160,
+                      child: DrawerHeader(
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Image.asset(
+                              'images/user_icon.png',
+                              height: 60,
+                              width: 60,
+                            ),
+                            const SizedBox(
+                              width: 15,
+                            ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const <Widget>[
+                                Text(
+                                  'Keshav',
+                                  style: TextStyle(
+                                      fontSize: 20, fontFamily: 'Brand-Bold'),
+                                ),
+                                SizedBox(
+                                  height: 5,
+                                ),
+                                Text('View Profile'),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    const BrandDivider(),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    const ListTile(
+                      leading: Icon(Icons.navigation),
+                      title: Text(
+                        'Add a navigation',
+                        style: kDrawerItemStyle,
+                      ),
+                    ),
+                    const ListTile(
+                      leading: Icon(Icons.history),
+                      title: Text(
+                        'Navigation History',
+                        style: kDrawerItemStyle,
+                      ),
+                    ),
+                    const ListTile(
+                      leading: Icon(Icons.contact_support),
+                      title: Text(
+                        'Support',
+                        style: kDrawerItemStyle,
+                      ),
+                    ),
+                    const ListTile(
+                      leading: Icon(Icons.info),
+                      title: Text(
+                        'About',
+                        style: kDrawerItemStyle,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            body: Stack(
               children: <Widget>[
-                Container(
-                  color: Colors.white,
-                  height: 160,
-                  child: DrawerHeader(
+                GoogleMap(
+                  padding: EdgeInsets.only(bottom: mapBottomPadding),
+                  // initialCameraPosition: _kGooglePlex,
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(
+                        currentPosition.latitude, currentPosition.longitude),
+                    zoom: 14.4746,
+                  ),
+                  myLocationEnabled: true,
+                  compassEnabled: true,
+                  zoomGesturesEnabled: true,
+                  mapType: MapType.normal,
+                  myLocationButtonEnabled: true,
+                  polylines: polylines,
+                  markers: markers,
+                  circles: circles,
+                  onMapCreated: (GoogleMapController controller) {
+                    mapController = controller;
+                    _controller.complete(controller);
+
+                    setState(() {
+                      mapBottomPadding = (Platform.isAndroid) ? 280 : 270;
+                    });
+                  },
+                ),
+                // menu button
+                Positioned(
+                  top: 44,
+                  left: 20,
+                  child: GestureDetector(
+                    onTap: () {
+                      scaffoldKey.currentState?.openDrawer();
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: const [
+                            BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 5.0,
+                                spreadRadius: 0.5,
+                                offset: Offset(
+                                  0.7,
+                                  0.7,
+                                )),
+                          ]),
+                      child: const CircleAvatar(
+                        backgroundColor: Colors.white,
+                        radius: 20,
+                        child: Icon(
+                          Icons.menu,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // search sheet
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    height: searchSheetHeight,
                     decoration: const BoxDecoration(
                       color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          topRight: Radius.circular(15)),
                     ),
-                    child: Row(
-                      children: <Widget>[
-                        Image.asset(
-                          'images/user_icon.png',
-                          height: 60,
-                          width: 60,
-                        ),
-                        const SizedBox(
-                          width: 15,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const <Widget>[
-                            Text(
-                              'Keshav',
-                              style: TextStyle(
-                                  fontSize: 20, fontFamily: 'Brand-Bold'),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          const SizedBox(
+                            height: 5,
+                          ),
+                          const Text(
+                            'Nice to see you!',
+                            style: TextStyle(fontSize: 10),
+                          ),
+                          const Text(
+                            'Where are you going?',
+                            style: TextStyle(
+                                fontSize: 18, fontFamily: 'Brand-Bold'),
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              var response = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SearchPage()));
+                              if (response == 'getDirection') {
+                                await getDirection();
+                              }
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(4),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 5.0,
+                                      spreadRadius: 0.5,
+                                      offset: Offset(0.7, 0.7),
+                                    )
+                                  ]),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Row(
+                                  children: const <Widget>[
+                                    Icon(
+                                      Icons.search,
+                                      color: Colors.blueAccent,
+                                    ),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text('Search destination'),
+                                  ],
+                                ),
+                              ),
                             ),
-                            SizedBox(
-                              height: 5,
-                            ),
-                            Text('View Profile'),
-                          ],
-                        )
-                      ],
+                          ),
+                          const SizedBox(
+                            height: 22,
+                          ),
+                          Row(
+                            children: <Widget>[
+                              const Icon(
+                                Icons.home,
+                                color: BrandColors.colorDimText,
+                              ),
+                              const SizedBox(
+                                width: 12,
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Container(
+                                      width: MediaQuery.of(context).size.width *
+                                          .75,
+                                      child: Text(
+                                        (Provider.of<AppData>(context)
+                                                    .pickupAddress !=
+                                                null)
+                                            ? Provider.of<AppData>(context,
+                                                    listen: false)
+                                                .pickupAddress
+                                                .placeName
+                                            : "Add Home",
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      )),
+                                  const SizedBox(
+                                    height: 3,
+                                  ),
+                                  const Text(
+                                    "Your residential address",
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: BrandColors.colorDimText),
+                                  ),
+                                ],
+                              )
+                            ],
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          const BrandDivider(),
+                          const SizedBox(
+                            height: 16,
+                          ),
+                          Row(
+                            children: <Widget>[
+                              const Icon(
+                                Icons.work,
+                                color: BrandColors.colorDimText,
+                              ),
+                              const SizedBox(
+                                width: 12,
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: const <Widget>[
+                                  Text('Add Work'),
+                                  SizedBox(
+                                    height: 3,
+                                  ),
+                                  Text(
+                                    "Your office address",
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: BrandColors.colorDimText),
+                                  ),
+                                ],
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-                const BrandDivider(),
-                const SizedBox(
-                  height: 10,
-                ),
-                const ListTile(
-                  leading: Icon(Icons.navigation),
-                  title: Text(
-                    'Add a navigation',
-                    style: kDrawerItemStyle,
-                  ),
-                ),
-                const ListTile(
-                  leading: Icon(Icons.history),
-                  title: Text(
-                    'Navigation History',
-                    style: kDrawerItemStyle,
-                  ),
-                ),
-                const ListTile(
-                  leading: Icon(Icons.contact_support),
-                  title: Text(
-                    'Support',
-                    style: kDrawerItemStyle,
-                  ),
-                ),
-                const ListTile(
-                  leading: Icon(Icons.info),
-                  title: Text(
-                    'About',
-                    style: kDrawerItemStyle,
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-        body: Stack(
-          children: <Widget>[
-            GoogleMap(
-              padding: EdgeInsets.only(bottom: mapBottomPadding),
-              // initialCameraPosition: _kGooglePlex,
-              initialCameraPosition: CameraPosition(
-                target: LatLng(currentPosition.latitude, currentPosition.longitude),
-                zoom: 14.4746,
-              ),
-              myLocationEnabled: true,
-              compassEnabled: true,
-              zoomGesturesEnabled: true,
-              mapType: MapType.normal,
-              myLocationButtonEnabled: true,
-              polylines: polylines,
-              markers: markers,
-              circles:circles,
-              onMapCreated: (GoogleMapController controller) {
-                mapController = controller;
-                _controller.complete(controller);
-
-
-                setState(() {
-                  mapBottomPadding = (Platform.isAndroid) ? 280 : 270;
-                });
-              },
-            ),
-            // menu button
-            Positioned(
-              top: 44,
-              left: 20,
-              child: GestureDetector(
-                onTap: () {
-                  scaffoldKey.currentState?.openDrawer();
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 5.0,
-                            spreadRadius: 0.5,
-                            offset: Offset(
-                              0.7,
-                              0.7,
-                            )),
-                      ]),
-                  child: const CircleAvatar(
-                    backgroundColor: Colors.white,
-                    radius: 20,
-                    child: Icon(
-                      Icons.menu,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // search sheet
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                height: searchSheetHeight,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(15),
-                      topRight: Radius.circular(15)),
-                ),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const SizedBox(
-                        height: 5,
-                      ),
-                      const Text(
-                        'Nice to see you!',
-                        style: TextStyle(fontSize: 10),
-                      ),
-                      const Text(
-                        'Where are you going?',
-                        style:
-                            TextStyle(fontSize: 18, fontFamily: 'Brand-Bold'),
-                      ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      GestureDetector(
-                        onTap: () async{
-                          var response = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const SearchPage()));
-                          if(response=='getDirection'){
-                            await getDirection();
-                          }
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(4),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 5.0,
-                                  spreadRadius: 0.5,
-                                  offset: Offset(0.7, 0.7),
-                                )
-                              ]),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              children: const <Widget>[
-                                Icon(
-                                  Icons.search,
-                                  color: Colors.blueAccent,
-                                ),
-                                SizedBox(
-                                  width: 10,
-                                ),
-                                Text('Search destination'),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 22,
-                      ),
-                      Row(
-                        children: <Widget>[
-                          const Icon(
-                            Icons.home,
-                            color: BrandColors.colorDimText,
-                          ),
-                          const SizedBox(
-                            width: 12,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children:  <Widget>[
-                              Container(
-                                  width: MediaQuery.of(context).size.width * .75,
-                                  child: Text((Provider.of<AppData>(context).pickupAddress !=null) ? Provider.of<AppData>(context,listen: false).pickupAddress.placeName :"Add Home",
-                                  overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  )),
-                              const SizedBox(
-                                height: 3,
-                              ),
-                              const Text(
-                                "Your residential address",
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: BrandColors.colorDimText),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      const BrandDivider(),
-                      const SizedBox(
-                        height: 16,
-                      ),
-                      Row(
-                        children: <Widget>[
-                          const Icon(
-                            Icons.work,
-                            color: BrandColors.colorDimText,
-                          ),
-                          const SizedBox(
-                            width: 12,
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const <Widget>[
-                              Text('Add Work'),
-                              SizedBox(
-                                height: 3,
-                              ),
-                              Text(
-                                "Your office address",
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: BrandColors.colorDimText),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ));
+            ));
   }
 
-  Future<void> getDirection() async{
-    var pickup = Provider.of<AppData>(context,listen: false).pickupAddress;
-    var destination = Provider.of<AppData>(context,listen: false).destinationAddress;
+  Future<void> getDirection() async {
+    var pickup = Provider.of<AppData>(context, listen: false).pickupAddress;
+    var destination =
+        Provider.of<AppData>(context, listen: false).destinationAddress;
 
     var pickupLatLng = LatLng(pickup.latitude, pickup.longitude);
     var destinationLatLng = LatLng(destination.latitude, destination.longitude);
     showDialog(
         context: context,
-        builder: (BuildContext context)=>const ProgressDialog(status: 'Please wait...'),
-      barrierDismissible: false
-    );
-    var thisDetails = await HelperMethods.getDirectionsDetails(pickupLatLng, destinationLatLng);
+        builder: (BuildContext context) =>
+            const ProgressDialog(status: 'Please wait...'),
+        barrierDismissible: false);
+    var thisDetails = await HelperMethods.getDirectionsDetails(
+        pickupLatLng, destinationLatLng);
     Navigator.pop(context);
     PolylinePoints polylinePoints = PolylinePoints();
-    List<PointLatLng> results = polylinePoints.decodePolyline(thisDetails!.encodedPoints);
+    List<PointLatLng> results =
+        polylinePoints.decodePolyline(thisDetails!.encodedPoints);
     polyLineCoordinates.clear();
-    if(results.isNotEmpty){
+    if (results.isNotEmpty) {
       for (var point in results) {
-        polyLineCoordinates.add(LatLng(point.latitude, point.longitude)
-        );
+        polyLineCoordinates.add(LatLng(point.latitude, point.longitude));
       }
     }
     polylines.clear();
     setState(() {
-      Polyline polyline =  Polyline(
+      Polyline polyline = Polyline(
         polylineId: const PolylineId('polyid'),
         color: const Color.fromARGB(255, 95, 109, 237),
         points: polyLineCoordinates,
@@ -391,23 +403,27 @@ class _MainPageState extends State<MainPage> {
         startCap: Cap.roundCap,
         endCap: Cap.roundCap,
         geodesic: true,
-
       );
       polylines.add(polyline);
     });
     LatLngBounds bounds;
-    if(pickupLatLng.latitude>destinationLatLng.latitude && pickupLatLng.longitude > destinationLatLng.longitude){
-      bounds = LatLngBounds(southwest: destinationLatLng, northeast: pickupLatLng);
-    }
-    else if(pickupLatLng.longitude>destinationLatLng.longitude){
-      bounds = LatLngBounds(southwest: LatLng(pickupLatLng.latitude,destinationLatLng.longitude), northeast: LatLng(destinationLatLng.latitude,pickupLatLng.longitude));
-    }
-    else if(pickupLatLng.latitude >destinationLatLng.latitude){
-      bounds = LatLngBounds(southwest: LatLng(destinationLatLng.latitude,pickupLatLng.latitude),
-          northeast: LatLng(pickupLatLng.latitude,destinationLatLng.longitude));
-    }
-    else{
-      bounds = LatLngBounds(southwest: pickupLatLng,northeast: destinationLatLng);
+    if (pickupLatLng.latitude > destinationLatLng.latitude &&
+        pickupLatLng.longitude > destinationLatLng.longitude) {
+      bounds =
+          LatLngBounds(southwest: destinationLatLng, northeast: pickupLatLng);
+    } else if (pickupLatLng.longitude > destinationLatLng.longitude) {
+      bounds = LatLngBounds(
+          southwest: LatLng(pickupLatLng.latitude, destinationLatLng.longitude),
+          northeast:
+              LatLng(destinationLatLng.latitude, pickupLatLng.longitude));
+    } else if (pickupLatLng.latitude > destinationLatLng.latitude) {
+      bounds = LatLngBounds(
+          southwest: LatLng(destinationLatLng.latitude, pickupLatLng.latitude),
+          northeast:
+              LatLng(pickupLatLng.latitude, destinationLatLng.longitude));
+    } else {
+      bounds =
+          LatLngBounds(southwest: pickupLatLng, northeast: destinationLatLng);
     }
     mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 10));
 
@@ -415,14 +431,15 @@ class _MainPageState extends State<MainPage> {
       markerId: const MarkerId('pickup'),
       position: pickupLatLng,
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      infoWindow: InfoWindow(title: pickup.placeName,snippet: 'My location'),
+      infoWindow: InfoWindow(title: pickup.placeName, snippet: 'My location'),
     );
 
     Marker destinationMarker = Marker(
       markerId: const MarkerId('pickup'),
       position: destinationLatLng,
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      infoWindow: InfoWindow(title: destination.placeName,snippet: 'Destination'),
+      infoWindow:
+          InfoWindow(title: destination.placeName, snippet: 'Destination'),
     );
     setState(() {
       markers.add(pickupMarker);
@@ -430,13 +447,12 @@ class _MainPageState extends State<MainPage> {
     });
 
     Circle pickupCircle = Circle(
-      circleId: const CircleId('pickup'),
-      strokeColor: BrandColors.colorGreen,
-      strokeWidth: 3,
-      radius: 12,
-      center: pickupLatLng,
-      fillColor: BrandColors.colorGreen
-    );
+        circleId: const CircleId('pickup'),
+        strokeColor: BrandColors.colorGreen,
+        strokeWidth: 3,
+        radius: 12,
+        center: pickupLatLng,
+        fillColor: BrandColors.colorGreen);
 
     Circle destinationCircle = Circle(
         circleId: const CircleId('destination'),
@@ -444,13 +460,11 @@ class _MainPageState extends State<MainPage> {
         strokeWidth: 3,
         radius: 12,
         center: destinationLatLng,
-        fillColor: BrandColors.colorAccentPurple
-    );
+        fillColor: BrandColors.colorAccentPurple);
 
-   setState(() {
-     circles.add(pickupCircle);
-     circles.add(destinationCircle);
-   });
-
+    setState(() {
+      circles.add(pickupCircle);
+      circles.add(destinationCircle);
+    });
   }
 }
