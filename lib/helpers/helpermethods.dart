@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cargo_tracking/constants.dart';
 import 'package:cargo_tracking/datamodels/address.dart';
 import 'package:cargo_tracking/datamodels/directionsdetails.dart';
@@ -21,6 +23,16 @@ class HelperMethods {
       final dataSnapshot = event.snapshot;
       if(dataSnapshot.value !=null){
         print(dataSnapshot.value);
+        String fireBaseValue = dataSnapshot.value.toString();
+        var newValue = fireBaseValue.replaceAll("{", "").replaceAll("}", "");
+        var dataSp = newValue.split(',');
+        Map<String,String> mapData = Map();
+        dataSp.forEach((element) => mapData[element.split(':')[0].trim()] = element.split(':')[1].trim());
+        print(mapData);
+        print(mapData['phone']);
+        print(mapData['fullname']);
+        print(mapData['email']);
+
         user.User currentUser = user.User.fromSnapshot(dataSnapshot);
         print(currentUser.fullName);
       }
