@@ -1,4 +1,4 @@
-import 'package:cargo_tracking/Constants.dart';
+import 'package:cargo_tracking/constants.dart';
 import 'package:cargo_tracking/brand_colors.dart';
 import 'package:cargo_tracking/datamodels/predictions.dart';
 import 'package:cargo_tracking/dataprovider/appdata.dart';
