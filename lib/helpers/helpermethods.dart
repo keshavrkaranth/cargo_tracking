@@ -16,25 +16,13 @@ import 'package:cargo_tracking/datamodels/user.dart' as user;
 class HelperMethods {
   
   static void getCurrentUserInfo() async{
-    User currentFirebaseUser = FirebaseAuth.instance.currentUser!;
+    currentFirebaseUser = FirebaseAuth.instance.currentUser!;
     String userId = currentFirebaseUser.uid;
     DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users/$userId');
     userRef.once().then((event) {
       final dataSnapshot = event.snapshot;
       if(dataSnapshot.value !=null){
-        print(dataSnapshot.value);
-        String fireBaseValue = dataSnapshot.value.toString();
-        var newValue = fireBaseValue.replaceAll("{", "").replaceAll("}", "");
-        var dataSp = newValue.split(',');
-        Map<String,String> mapData = Map();
-        dataSp.forEach((element) => mapData[element.split(':')[0].trim()] = element.split(':')[1].trim());
-        print(mapData);
-        print(mapData['phone']);
-        print(mapData['fullname']);
-        print(mapData['email']);
-
-        user.User currentUser = user.User.fromSnapshot(dataSnapshot);
-        print(currentUser.fullName);
+        currentUser = user.User.fromSnapshot(dataSnapshot);
       }
     }
     );

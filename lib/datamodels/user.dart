@@ -9,18 +9,22 @@ class User{
     required this.email,
     required this.fullName,
     required this.id,
-    required this.phone
+     required this.phone
 });
   User.fromSnapshot(DataSnapshot snapshot){
-    if(snapshot.value !=null) {
-      id = snapshot.key!;
-      print("test1");
-      print(snapshot.value);
-      phone = 'qwerty';
-      email='keshavarkarantha@gmail.com';
-      fullName = 'keshavrkaranth';
-
+    String fireBaseValue = snapshot.value.toString();
+    var newValue = fireBaseValue.replaceAll("{", "").replaceAll("}", "");
+    var dataSp = newValue.split(',');
+    Map<String,String> mapData = {};
+    for (var element in dataSp) {
+      mapData[element.split(':')[0].trim()] = element.split(':')[1].trim();
     }
+      id = snapshot.key!;
+      phone = mapData['phone']!;
+      email=mapData['email']!;
+      fullName = mapData['fullname']!;
+
+
   }
 
 }
