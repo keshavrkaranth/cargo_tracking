@@ -20,7 +20,7 @@ class InitialPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator(),);
           }
           else if(snapshot.hasData){
-            return const MainPage();
+            return  MainPage();
           }
           else if(snapshot.hasError){
             return const Center(child: Text('Something went wrong!'));
