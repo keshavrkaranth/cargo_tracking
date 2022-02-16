@@ -37,14 +37,43 @@ class _LoginPageState extends State<LoginPage> {
     // show dialog
     showDialog(context: context,
         builder: (BuildContext context)=> const ProgressDialog(status: 'Logging you in'));
+    final User? user = (await _auth.signInWithEmailAndPassword(
+        email: emailController.text, password: passwordController.text).catchError((ex){
+      Navigator.pop(context);
+      showSnackBar(ex.message.toString());
+    })).user;
+
     try{
-      await _auth.signInWithEmailAndPassword(
-          email: emailController.text, password: passwordController.text);
-      Navigator.pop(context);
-      Navigator.pushNamedAndRemoveUntil(context, MainPage.id, (route) => false);
-    }on FirebaseAuthException catch(e){
-      Navigator.pop(context);
-     showSnackBar(e.message.toString());
+      DatabaseReference userRef = FirebaseDatabase.instance.reference().child('drivers/${user?.uid}');
+      userRef.once().then((value) {
+        final dataSnapshot = value.snapshot;
+        String fireBaseValue = dataSnapshot.value.toString();
+        var newValue = fireBaseValue.replaceAll("{", "").replaceAll("}", "");
+        var dataSp = newValue.split(',');
+        Map<String,String> mapData = {};
+        for (var element in dataSp) {
+          mapData[element.split(':')[0].trim()] = element.split(':')[1].trim();
+        }
+        if(mapData['role']=='DRIVER'){
+          showSnackBar("DRIVER NOT ALLOWED TO SIGN IN HERE");
+          Navigator.pop(context, false);
+          return;
+        }
+      });
+    }catch(error){
+      print("ERROR:$error");
+    }
+
+    if(user != null){
+      DatabaseReference userRef = FirebaseDatabase.instance.reference().child('users/${user.uid}');
+      userRef.once().then((value) {
+        final dataSnapshot = value.snapshot;
+        if (dataSnapshot.value != null) {
+          Navigator.pushNamedAndRemoveUntil(context, MainPage.id, (route) => false);
+        }
+
+      });
+
     }
 }
   @override

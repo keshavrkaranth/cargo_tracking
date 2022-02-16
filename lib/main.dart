@@ -2,7 +2,9 @@ import 'package:cargo_tracking/Screens/loginpage.dart';
 import 'package:cargo_tracking/Screens/mainpage.dart';
 import 'package:cargo_tracking/Screens/registrationpage.dart';
 import 'package:cargo_tracking/Screens/startingpage.dart';
+import 'package:cargo_tracking/constants.dart';
 import 'package:cargo_tracking/dataprovider/appdata.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +24,7 @@ Future<void> main() async {
       storageBucket: 'cargo-tracking-815a8.appspot.com',
     ),
   );
+  currentFirebaseUser = FirebaseAuth.instance.currentUser!;
 
   runApp(const MyApp());
 }
@@ -41,7 +44,7 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Brand-Regular',
               primarySwatch: Colors.blue,
             ),
-            initialRoute: MainPage.id,
+            initialRoute: (currentUser == null) ? LoginPage.id : MainPage.id,
             routes: {
               RegistrationPage.id: (context) =>  RegistrationPage(),
               LoginPage.id: (context) => const LoginPage(),

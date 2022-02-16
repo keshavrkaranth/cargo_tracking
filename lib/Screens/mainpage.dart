@@ -3,7 +3,9 @@ import 'package:cargo_tracking/Screens/searchpage.dart';
 import 'package:cargo_tracking/brand_colors.dart';
 import 'package:cargo_tracking/constants.dart';
 import 'package:cargo_tracking/datamodels/directionsdetails.dart';
+import 'package:cargo_tracking/datamodels/nearbydriver.dart';
 import 'package:cargo_tracking/dataprovider/appdata.dart';
+import 'package:cargo_tracking/helpers/firehelper.dart';
 import 'package:cargo_tracking/helpers/helpermethods.dart';
 import 'package:cargo_tracking/styles/styles.dart';
 import 'package:cargo_tracking/widgets/BrandDivider.dart';
@@ -11,6 +13,7 @@ import 'package:cargo_tracking/widgets/ProgressDialog.dart';
 import 'package:cargo_tracking/widgets/TaxiButton.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -18,7 +21,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
-
 
 import 'package:provider/provider.dart';
 
@@ -37,7 +39,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   double searchSheetHeight = (Platform.isIOS) ? 300 : 275;
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   double rideDetailsHeight = 0; //(Platform.isAndroid) ? 235 : 200;
-  double requestingSheetHeight = 0 ; //(Platform.isAndroid) ? 195 : 220;
+  double requestingSheetHeight = 0; //(Platform.isAndroid) ? 195 : 220;
 
   late DatabaseReference rideRef;
 
@@ -46,13 +48,16 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   final Set<Polyline> polyLines = {};
   Set<Marker> markers = {};
   Set<Circle> circles = {};
-  late  DirectionDetails tripDirectionDetails;
+  late DirectionDetails tripDirectionDetails;
   bool drawerCanOpen = true;
-
+  bool nearByDriversKeysLoaded = false;
+  late CameraPosition cp;
 
   var geoLocator = Geolocator();
   late Position currentPosition;
 
+
+  late BitmapDescriptor nearbyIcon;
 
   Future<void> setupPositionLocator() async {
     setState(() {
@@ -66,23 +71,24 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       currentPosition = position;
     });
     LatLng pos = LatLng(position.latitude, position.longitude);
-    CameraPosition cp = CameraPosition(target: pos, zoom: 14);
+    cp = CameraPosition(target: pos, zoom: 14);
     setState(() {
       isLoading = false;
     });
+    setGeoFireListner();
   }
 
-  void showDetailsSheet() async{
+  void showDetailsSheet() async {
     await getDirection();
     setState(() {
       searchSheetHeight = 0;
-      rideDetailsHeight =(Platform.isAndroid) ? 235 : 260;
+      rideDetailsHeight = (Platform.isAndroid) ? 235 : 260;
       mapBottomPadding = (Platform.isAndroid) ? 240 : 230;
       drawerCanOpen = false;
     });
   }
 
-  void showRequestingSheet(){
+  void showRequestingSheet() {
     setState(() {
       rideDetailsHeight = 0;
       requestingSheetHeight = (Platform.isAndroid) ? 195 : 220;
@@ -92,16 +98,34 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     createRideRequest();
   }
 
+  void createMarker() {
+      ImageConfiguration imageConfiguration =
+          createLocalImageConfiguration(context, size: const Size(2, 2));
+      BitmapDescriptor.fromAssetImage(imageConfiguration,
+          (Platform.isIOS) ? 'images/car_ios.png' : 'images/car_android.png').then((icon) {
+            nearbyIcon = icon;
+      });
+  }
+
   @override
   void initState() {
     super.initState();
+
     setupPositionLocator();
-    tripDirectionDetails = DirectionDetails(distanceText: '0', durationText: '0', distanceValue: '0', durationValue: '0', encodedPoints: '0');
+    tripDirectionDetails = DirectionDetails(
+        distanceText: '0',
+        durationText: '0',
+        distanceValue: '0',
+        durationValue: '0',
+        encodedPoints: '0');
     HelperMethods.getCurrentUserInfo();
+
   }
 
   @override
   Widget build(BuildContext context) {
+  createMarker();
+
     return isLoading
         ? const ProgressDialog(status: 'Loading...')
         : Scaffold(
@@ -190,11 +214,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                 GoogleMap(
                   padding: EdgeInsets.only(bottom: mapBottomPadding),
                   // initialCameraPosition: _kGooglePlex,
-                  initialCameraPosition: CameraPosition(
-                    target: LatLng(
-                        currentPosition.latitude, currentPosition.longitude),
-                    zoom: 14.4746,
-                  ),
+                  initialCameraPosition: cp,
                   compassEnabled: true,
                   zoomGesturesEnabled: true,
                   mapType: MapType.normal,
@@ -217,9 +237,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                   left: 20,
                   child: GestureDetector(
                     onTap: () {
-                      if(drawerCanOpen){
+                      if (drawerCanOpen) {
                         scaffoldKey.currentState?.openDrawer();
-                      }else{
+                      } else {
                         resetApp();
                       }
                     },
@@ -235,15 +255,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                                 offset: Offset(
                                   0.7,
                                   0.7,
-                                )
-                            ),
+                                )),
                           ]),
-                      child:  CircleAvatar(
+                      child: CircleAvatar(
                         backgroundColor: Colors.white,
                         radius: 20,
                         child: Icon(
-                          (drawerCanOpen) ?
-                          Icons.menu : Icons.arrow_back,
+                          (drawerCanOpen) ? Icons.menu : Icons.arrow_back,
                           color: Colors.black87,
                         ),
                       ),
@@ -259,7 +277,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     vsync: this,
                     duration: const Duration(microseconds: 150),
                     curve: Curves.easeIn,
-
                     child: Container(
                       height: searchSheetHeight,
                       decoration: const BoxDecoration(
@@ -345,11 +362,13 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Container(
-                                        width: MediaQuery.of(context).size.width *
-                                            .75,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                .75,
                                         child: Text(
                                           (Provider.of<AppData>(context)
-                                                      .pickupAddress != null)
+                                                      .pickupAddress !=
+                                                  null)
                                               ? Provider.of<AppData>(context,
                                                       listen: false)
                                                   .pickupAddress
@@ -421,14 +440,15 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     child: Container(
                       decoration: const BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.only(topLeft: Radius.circular(15),topRight: Radius.circular(15)),
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(15),
+                            topRight: Radius.circular(15)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 15.0,
-                            spreadRadius: 0.5,
-                            offset: Offset(0.7, 0.7)
-                          )
+                              color: Colors.black26,
+                              blurRadius: 15.0,
+                              spreadRadius: 0.5,
+                              offset: Offset(0.7, 0.7))
                         ],
                       ),
                       height: rideDetailsHeight,
@@ -437,23 +457,52 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                         child: Column(
                           children: <Widget>[
                             Container(
-                              width:double.infinity,
+                              width: double.infinity,
                               color: BrandColors.colorAccent1,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 child: Row(
                                   children: <Widget>[
-                                    Image.asset('images/taxi.png',height: 70,width: 70,),
-                                    const SizedBox(width: 16,),
+                                    Image.asset(
+                                      'images/taxi.png',
+                                      height: 70,
+                                      width: 70,
+                                    ),
+                                    const SizedBox(
+                                      width: 16,
+                                    ),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children:  <Widget>[
-                                        const Text('Taxi',style: TextStyle(fontSize: 18,fontFamily: 'Brand-Bold'),),
-                                        Text((tripDirectionDetails !=null) ? tripDirectionDetails.distanceText : "12" ,style: const TextStyle(fontSize: 16,color: BrandColors.colorTextLight),),
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        const Text(
+                                          'Taxi',
+                                          style: TextStyle(
+                                              fontSize: 18,
+                                              fontFamily: 'Brand-Bold'),
+                                        ),
+                                        Text(
+                                          (tripDirectionDetails != null)
+                                              ? tripDirectionDetails
+                                                  .distanceText
+                                              : "12",
+                                          style: const TextStyle(
+                                              fontSize: 16,
+                                              color:
+                                                  BrandColors.colorTextLight),
+                                        ),
                                       ],
                                     ),
                                     Expanded(child: Container()),
-                                     Text( (tripDirectionDetails !=null) ?'\$ ${HelperMethods.estimateFares(tripDirectionDetails) }':"",style: const TextStyle(fontSize: 18,fontFamily: 'Brand-Bold'),),
+                                    Text(
+                                      (tripDirectionDetails != null)
+                                          ? '\$ ${HelperMethods.estimateFares(tripDirectionDetails)}'
+                                          : "",
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          fontFamily: 'Brand-Bold'),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -462,30 +511,44 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                               height: 22,
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: Row(
                                 children: const <Widget>[
-                                  Icon(FontAwesomeIcons.moneyBillAlt,size: 10,color: BrandColors.colorTextLight,),
-                                  SizedBox(width: 16,),
+                                  Icon(
+                                    FontAwesomeIcons.moneyBillAlt,
+                                    size: 10,
+                                    color: BrandColors.colorTextLight,
+                                  ),
+                                  SizedBox(
+                                    width: 16,
+                                  ),
                                   Text("Cash"),
-                                  SizedBox(width: 5,),
-                                  Icon(Icons.keyboard_arrow_down,color: BrandColors.colorTextLight,size: 16,),
+                                  SizedBox(
+                                    width: 5,
+                                  ),
+                                  Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: BrandColors.colorTextLight,
+                                    size: 16,
+                                  ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 22,),
+                            const SizedBox(
+                              height: 22,
+                            ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: TaxiOutlineButton(
                                 title: 'REQUEST CAB',
                                 color: Colors.green,
-                                onPressed: (){
+                                onPressed: () {
                                   showRequestingSheet();
                                 },
                               ),
-
                             )
-
                           ],
                         ),
                       ),
@@ -501,31 +564,34 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                     vsync: this,
                     duration: const Duration(milliseconds: 150),
                     child: GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         cancelRequest();
                         resetApp();
                       },
                       child: Container(
                         decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(topLeft: Radius.circular(15),topRight: Radius.circular(15)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 15.0,
-                              spreadRadius: 0.5,
-                              offset: Offset(0.7, 0.7),
-                            ),
-                          ]
-
-                        ),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(15),
+                                topRight: Radius.circular(15)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 15.0,
+                                spreadRadius: 0.5,
+                                offset: Offset(0.7, 0.7),
+                              ),
+                            ]),
                         height: requestingSheetHeight,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24,vertical: 18),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 18),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
-                            children:  <Widget> [
-                              const SizedBox(height: 10,),
+                            children: <Widget>[
+                              const SizedBox(
+                                height: 10,
+                              ),
                               SizedBox(
                                 width: double.infinity,
                                 child: TextLiquidFill(
@@ -537,19 +603,24 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                                     fontFamily: 'Brand-Bold',
                                   ),
                                   boxHeight: 40.0,
-
                                 ),
                               ),
-                              const SizedBox(height: 20,),
+                              const SizedBox(
+                                height: 20,
+                              ),
                               Container(
                                 height: 50,
                                 width: 50,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(25),
-                                  border: Border.all(width: 1.0,color: BrandColors.colorLightGrayFair)
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(25),
+                                    border: Border.all(
+                                        width: 1.0,
+                                        color: BrandColors.colorLightGrayFair)),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 25,
                                 ),
-                                child: const Icon(Icons.close,size: 25,),
                               ),
                               Container(
                                 width: double.infinity,
@@ -674,43 +745,110 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     });
   }
 
+  void setGeoFireListner() {
+    Geofire.initialize('driversAvailable');
+    Geofire.queryAtLocation(
+            currentPosition.latitude, currentPosition.longitude, 20)!
+        .listen((map) {
+      if (map != null) {
+        print(map);
+        var callBack = map['callBack'];
+        switch (callBack) {
+          case Geofire.onKeyEntered:
+            NearbyDriver nearbyDriver = NearbyDriver(
+                key: map['key'],
+                latitude: map['latitude'],
+                longitude: map['longitude']);
+            FireHelper.nearbyDriverList.add(nearbyDriver);
+            if (nearByDriversKeysLoaded) {
+              updateDriversOnmap();
+            }
 
-  void createRideRequest(){
+            break;
+
+          case Geofire.onKeyExited:
+            FireHelper.removeFromList(map['key']);
+            updateDriversOnmap();
+            break;
+
+          case Geofire.onKeyMoved:
+            NearbyDriver nearbyDriver = NearbyDriver(
+                key: map['key'],
+                latitude: map['latitude'],
+                longitude: map['longitude']);
+            print("CALLBACK CALLED1");
+            FireHelper.updateNearbyLocation(nearbyDriver);
+            updateDriversOnmap();
+            break;
+
+          case Geofire.onGeoQueryReady:
+            nearByDriversKeysLoaded = true;
+            print("CALLBACK CALLED");
+            updateDriversOnmap();
+            break;
+        }
+      }
+    });
+  }
+
+  void updateDriversOnmap() {
+    print("IN MARKERS");
+    setState(() {
+      markers.clear();
+    });
+    Set<Marker> tempMarkers = Set<Marker>();
+    for (NearbyDriver driver in FireHelper.nearbyDriverList) {
+      LatLng driversPosition = LatLng(driver.latitude, driver.longitude);
+      Marker thisMarker = Marker(
+        markerId: MarkerId("drivers${driver.key}"),
+        position: driversPosition,
+        icon: nearbyIcon,
+        rotation: HelperMethods.generateRandomNumber(360),
+      );
+
+      tempMarkers.add(thisMarker);
+    }
+    setState(() {
+      markers = tempMarkers;
+    });
+  }
+
+  void createRideRequest() {
     rideRef = FirebaseDatabase.instance.reference().child('rideRequest').push();
 
-    var pickup = Provider.of<AppData>(context,listen: false).pickupAddress;
-    var destination = Provider.of<AppData>(context,listen: false).destinationAddress;
+    var pickup = Provider.of<AppData>(context, listen: false).pickupAddress;
+    var destination =
+        Provider.of<AppData>(context, listen: false).destinationAddress;
 
     Map pickupMap = {
-      'latitude':pickup.latitude.toString(),
-      'longitude':pickup.longitude.toString(),
+      'latitude': pickup.latitude.toString(),
+      'longitude': pickup.longitude.toString(),
     };
 
     Map destinationMap = {
-      'latitude':destination.latitude.toString(),
-      'longitude':destination.longitude.toString(),
+      'latitude': destination.latitude.toString(),
+      'longitude': destination.longitude.toString(),
     };
 
     Map rideMap = {
-      'created_at':DateTime.now().toString(),
-      'rider_name':currentUser.fullName,
-      'rider_phone':currentUser.phone,
-      'pickup_address':pickup.placeName,
-      'destination_address':destination.placeName,
-      'pickup':pickupMap,
-      'destination':destinationMap,
-      'payment_method':'card',
-      'driver_id':'waiting..'
+      'created_at': DateTime.now().toString(),
+      'rider_name': currentUser.fullName,
+      'rider_phone': currentUser.phone,
+      'pickup_address': pickup.placeName,
+      'destination_address': destination.placeName,
+      'pickup': pickupMap,
+      'destination': destinationMap,
+      'payment_method': 'card',
+      'driver_id': 'waiting..'
     };
     rideRef.set(rideMap);
-
   }
 
-  void cancelRequest(){
+  void cancelRequest() {
     rideRef.remove();
   }
 
-  resetApp(){
+  resetApp() {
     setState(() {
       polyLineCoordinates.clear();
       polyLines.clear();
