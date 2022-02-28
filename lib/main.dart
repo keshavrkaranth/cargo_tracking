@@ -1,5 +1,6 @@
 import 'package:cargo_tracking/Screens/loginpage.dart';
 import 'package:cargo_tracking/Screens/mainpage.dart';
+import 'package:cargo_tracking/Screens/phonelogin.dart';
 import 'package:cargo_tracking/Screens/registrationpage.dart';
 import 'package:cargo_tracking/Screens/startingpage.dart';
 import 'package:cargo_tracking/constants.dart';
@@ -26,6 +27,7 @@ Future<void> main() async {
   );
   currentFirebaseUser = FirebaseAuth.instance.currentUser!;
 
+
   runApp(const MyApp());
 }
 
@@ -44,14 +46,16 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Brand-Regular',
               primarySwatch: Colors.blue,
             ),
-            initialRoute: (currentUser == null) ? LoginPage.id : MainPage.id,
+            initialRoute:  (currentUser == null) ? PhoneLogin.id : MainPage.id,
             routes: {
               RegistrationPage.id: (context) =>  RegistrationPage(),
               LoginPage.id: (context) => const LoginPage(),
               MainPage.id: (context) =>  MainPage(),
-              InitialPage.id: (context) => const InitialPage()
+              InitialPage.id: (context) => const InitialPage(),
+              PhoneLogin.id :(context) => const PhoneLogin(),
             },
           ),
         );
 }
 }
+//

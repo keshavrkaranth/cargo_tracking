@@ -1,4 +1,5 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:cargo_tracking/Screens/phonelogin.dart';
 import 'package:cargo_tracking/Screens/searchpage.dart';
 import 'package:cargo_tracking/brand_colors.dart';
 import 'package:cargo_tracking/constants.dart';
@@ -11,6 +12,7 @@ import 'package:cargo_tracking/styles/styles.dart';
 import 'package:cargo_tracking/widgets/BrandDivider.dart';
 import 'package:cargo_tracking/widgets/ProgressDialog.dart';
 import 'package:cargo_tracking/widgets/TaxiButton.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
@@ -202,6 +204,18 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                       leading: Icon(Icons.info),
                       title: Text(
                         'About',
+                        style: kDrawerItemStyle,
+                      ),
+                    ),
+                     ListTile(
+                       onTap: ()async {
+                         await FirebaseAuth.instance.signOut();
+                         Navigator.pushReplacement(context,
+                         MaterialPageRoute(builder: (context)=>PhoneLogin()));
+                       },
+                      leading: const Icon(Icons.logout),
+                      title: const Text(
+                        'Logout',
                         style: kDrawerItemStyle,
                       ),
                     ),
