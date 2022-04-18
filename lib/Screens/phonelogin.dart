@@ -22,11 +22,12 @@ class _PhoneLoginState extends State<PhoneLogin> {
 
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   var phoneController = TextEditingController();
-  var otpController = TextEditingController();
+  var newOtpController = OtpFieldController();
   FirebaseAuth auth = FirebaseAuth.instance;
   String verificationIDFinal = "";
   int start = 60;
   late Timer timer;
+  String smsCode = "";
 
 
   bool otpVisibility = false;
@@ -72,17 +73,21 @@ class _PhoneLoginState extends State<PhoneLogin> {
                       ),
                     ),
                     Visibility(
-                        child: TextField(
-                          keyboardType: TextInputType.number,
-                          controller: otpController,
-                          decoration: const InputDecoration(
-                            helperText: 'OTP',
-                            prefix: Padding(
-                              padding: EdgeInsets.all(4),
-                              child: Text(""),
-                            ),
+                        child: OTPTextField(
+
+                          controller: newOtpController,
+                          length: 6,
+                          width: double.infinity,
+                          otpFieldStyle: OtpFieldStyle(
+                            backgroundColor: Colors.white,
+                            borderColor: Colors.white,
                           ),
-                          maxLength: 6,
+                          style: const TextStyle(fontSize: 17, color: Colors.black),
+                          textFieldAlignment: MainAxisAlignment.spaceAround,
+                          fieldStyle: FieldStyle.underline,
+                          onCompleted: (value){
+                            smsCode = value;
+                          },
 
                         ),
                       visible: otpVisibility,
@@ -99,6 +104,7 @@ class _PhoneLoginState extends State<PhoneLogin> {
                                   start = 60;
                                   startTimer();
                                   loginWithPhone();
+                                  newOtpController.clear();
                                 });
                               }else{
                                 showSnackBar("Wait till 60 sec to request new OTP");
@@ -106,23 +112,24 @@ class _PhoneLoginState extends State<PhoneLogin> {
 
                             }
                         ),
-                        SizedBox(width: 50,),
-                        Text("Send OTP again in"),
-                        SizedBox(width: 3,),
+                        const SizedBox(width: 50,),
+                        const Text("Send OTP again in"),
+                        const SizedBox(width: 3,),
                         Text("$start sec"),
 
                       ],
                     ),
                       visible: otpVisibility,
                     ),
-                    SizedBox(height: 40,),
+                    const SizedBox(height: 40,),
                     RaisedButton(onPressed: (){
+                      print("TEST${smsCode}");
                       if(phoneController.text.toString()==""){
                         showSnackBar("Phone number required");
                         return;
                       }
                       if(otpVisibility){
-                        if (otpController.text.toString()==""){
+                        if (smsCode==""){
                           showSnackBar("Enter your OTP");
                           return;
                         }
@@ -182,6 +189,7 @@ class _PhoneLoginState extends State<PhoneLogin> {
           await auth.signInWithCredential(credential).then((value){
             Navigator.pop(context);
             timer.cancel();
+            otpVisibility = false;
             Navigator.pushNamedAndRemoveUntil(context, MainPage.id, (route) => false);
           });
         },
@@ -197,8 +205,9 @@ class _PhoneLoginState extends State<PhoneLogin> {
         codeAutoRetrievalTimeout: (String verificationId ){});
   }
   void verifyOtp() async{
+    print("SMSCODE,$smsCode");
     PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: verificationIDFinal, smsCode: otpController.text.trim());
+        verificationId: verificationIDFinal, smsCode: smsCode.trim());
 
     await auth.signInWithCredential(credential).then((value){
       Fluttertoast.showToast(
@@ -211,6 +220,7 @@ class _PhoneLoginState extends State<PhoneLogin> {
         fontSize: 16.0,
       );
       timer.cancel();
+      otpVisibility = false;
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MainPage()));
     }).catchError((err){
       showSnackBar(err.message.toString());

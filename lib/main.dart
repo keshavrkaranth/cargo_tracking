@@ -25,7 +25,7 @@ Future<void> main() async {
       storageBucket: 'cargo-tracking-815a8.appspot.com',
     ),
   );
-  currentFirebaseUser = FirebaseAuth.instance.currentUser!;
+
 
 
   runApp(const MyApp());
@@ -46,7 +46,7 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Brand-Regular',
               primarySwatch: Colors.blue,
             ),
-            initialRoute:  (currentUser == null) ? PhoneLogin.id : MainPage.id,
+            initialRoute:  (FirebaseAuth.instance.currentUser ==null) ? PhoneLogin.id : MainPage.id,
             routes: {
               RegistrationPage.id: (context) =>  RegistrationPage(),
               LoginPage.id: (context) => const LoginPage(),
@@ -58,4 +58,4 @@ class MyApp extends StatelessWidget {
         );
 }
 }
-//
+//(currentUser == null) ? PhoneLogin.id : MainPage.id

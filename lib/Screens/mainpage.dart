@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cargo_tracking/Screens/phonelogin.dart';
 import 'package:cargo_tracking/Screens/searchpage.dart';
@@ -42,6 +45,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   double rideDetailsHeight = 0; //(Platform.isAndroid) ? 235 : 200;
   double requestingSheetHeight = 0; //(Platform.isAndroid) ? 195 : 220;
+  StreamSubscription<DatabaseEvent>? _onTempSubscription;
 
   late DatabaseReference rideRef;
 
@@ -121,8 +125,33 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         durationValue: '0',
         encodedPoints: '0');
     HelperMethods.getCurrentUserInfo();
+    DatabaseReference ref = FirebaseDatabase.instance.reference().child("driversLocation");
+    _onTempSubscription = ref.onValue.listen((event) {
+      var snapshot = event.snapshot;
+      final myData = json.decode(json.encode(snapshot.value));
+      print("MyData$myData");
+      LatLng pos = LatLng(myData["latitude"], myData["longitude"]);
+
+      Marker movingMarker = Marker(
+          markerId: const MarkerId("moving"),
+          position: pos,
+          icon: nearbyIcon,
+          infoWindow: const InfoWindow(title: "Current Location"));
+
+      setState(() {
+        CameraPosition cp = CameraPosition(target: pos, zoom: 17);
+        mapController.animateCamera(CameraUpdate.newCameraPosition(cp));
+        markers.removeWhere((marker) => marker.markerId.value == 'moving');
+        markers.add(movingMarker);
+      });
+    });
 
   }
+
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
