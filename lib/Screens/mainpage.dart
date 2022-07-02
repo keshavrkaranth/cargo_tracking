@@ -61,7 +61,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   var geoLocator = Geolocator();
   late Position currentPosition;
-
+  late Query _ref;
 
   late BitmapDescriptor nearbyIcon;
 
@@ -113,9 +113,19 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       });
   }
 
+  Future<void> test() async{
+    print("Phone number is:");
+    print(FirebaseAuth.instance.currentUser?.phoneNumber);
+    print(FirebaseAuth.instance.currentUser);
+    _ref =FirebaseDatabase.instance.ref().child('rideRequest').orderByChild('rider_phone').equalTo("9449518420");
+  }
+  void asyncMethod() async {
+    await test();
+  }
   @override
   void initState() {
     super.initState();
+    asyncMethod();
 
     setupPositionLocator();
     tripDirectionDetails = DirectionDetails(
@@ -129,7 +139,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     _onTempSubscription = ref.onValue.listen((event) {
       var snapshot = event.snapshot;
       final myData = json.decode(json.encode(snapshot.value));
-      print("MyData$myData");
       LatLng pos = LatLng(myData["latitude"], myData["longitude"]);
 
       Marker movingMarker = Marker(

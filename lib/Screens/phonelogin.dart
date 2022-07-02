@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:cargo_tracking/Screens/cargolist.dart';
 import 'package:cargo_tracking/Screens/mainpage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -221,7 +222,7 @@ class _PhoneLoginState extends State<PhoneLogin> {
       );
       timer.cancel();
       otpVisibility = false;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MainPage()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CargoList()));
     }).catchError((err){
       showSnackBar(err.message.toString());
     });

@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:cargo_tracking/main.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:provider/provider.dart';
+import 'package:cargo_tracking/Screens/cargolist.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,13 +47,14 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Brand-Regular',
               primarySwatch: Colors.blue,
             ),
-            initialRoute:  (FirebaseAuth.instance.currentUser ==null) ? PhoneLogin.id : MainPage.id,
+            initialRoute:  (FirebaseAuth.instance.currentUser ==null) ? PhoneLogin.id : CargoList.id,
             routes: {
               RegistrationPage.id: (context) =>  RegistrationPage(),
               LoginPage.id: (context) => const LoginPage(),
               MainPage.id: (context) =>  MainPage(),
               InitialPage.id: (context) => const InitialPage(),
               PhoneLogin.id :(context) => const PhoneLogin(),
+              CargoList.id :(context) => const CargoList(),
             },
           ),
         );

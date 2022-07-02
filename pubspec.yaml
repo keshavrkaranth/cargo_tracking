@@ -47,6 +47,9 @@ dependencies:
   flutter_geofire: ^2.0.1
   otp_text_field: ^1.1.2
   fluttertoast: ^8.0.9
+  url_launcher: ^6.0.20
+  maps_toolkit: ^2.0.0
+  firebase_messaging: ^11.4.2
 
 dev_dependencies:
   flutter_test:

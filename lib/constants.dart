@@ -6,4 +6,4 @@ String mapKey = 'AIzaSyDesMubxml8BIY1XrmziNdS6y6cNGoFBTs';
 
 User currentFirebaseUser = FirebaseAuth.instance.currentUser!;
 
-user.User currentUser = user.User(email: 'test@gmail.com',fullName: 'test',id:'test',phone: 'test');
+user.User currentUser = user.User();
