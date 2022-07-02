@@ -1,15 +1,15 @@
 import 'package:firebase_database/firebase_database.dart';
 
 class User{
-  late String fullName;
-  late String email;
-  late String phone;
-  late String id;
+  late String?fullName;
+  late String? email;
+  late String? phone;
+  late String? id;
   User({
-    required this.email,
-    required this.fullName,
-    required this.id,
-     required this.phone
+    this.email,
+     this.fullName,
+     this.id,
+      this.phone
 });
   User.fromSnapshot(DataSnapshot snapshot){
     String fireBaseValue = snapshot.value.toString();

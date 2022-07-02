@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:cargo_tracking/constants.dart';
 import 'package:cargo_tracking/datamodels/address.dart';
@@ -82,5 +83,12 @@ class HelperMethods {
     double totalFare = baseFare + distanceFare + timeFare;
     return totalFare.truncate();
 
+  }
+
+
+  static double generateRandomNumber(int max){
+    var randomGenerator = Random();
+    int randInt = randomGenerator.nextInt(max);
+    return randInt.toDouble();
   }
 }

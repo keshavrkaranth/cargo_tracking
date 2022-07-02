@@ -1,14 +1,18 @@
 import 'package:cargo_tracking/Screens/loginpage.dart';
 import 'package:cargo_tracking/Screens/mainpage.dart';
+import 'package:cargo_tracking/Screens/phonelogin.dart';
 import 'package:cargo_tracking/Screens/registrationpage.dart';
 import 'package:cargo_tracking/Screens/startingpage.dart';
+import 'package:cargo_tracking/constants.dart';
 import 'package:cargo_tracking/dataprovider/appdata.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:cargo_tracking/main.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:provider/provider.dart';
+import 'package:cargo_tracking/Screens/cargolist.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +26,8 @@ Future<void> main() async {
       storageBucket: 'cargo-tracking-815a8.appspot.com',
     ),
   );
+
+
 
   runApp(const MyApp());
 }
@@ -41,14 +47,17 @@ class MyApp extends StatelessWidget {
               fontFamily: 'Brand-Regular',
               primarySwatch: Colors.blue,
             ),
-            initialRoute: MainPage.id,
+            initialRoute:  (FirebaseAuth.instance.currentUser ==null) ? PhoneLogin.id : CargoList.id,
             routes: {
               RegistrationPage.id: (context) =>  RegistrationPage(),
               LoginPage.id: (context) => const LoginPage(),
               MainPage.id: (context) =>  MainPage(),
-              InitialPage.id: (context) => const InitialPage()
+              InitialPage.id: (context) => const InitialPage(),
+              PhoneLogin.id :(context) => const PhoneLogin(),
+              CargoList.id :(context) => const CargoList(),
             },
           ),
         );
 }
 }
+//(currentUser == null) ? PhoneLogin.id : MainPage.id

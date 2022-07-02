@@ -58,7 +58,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
       Map userMap = {
         'fullname':fullNameController.text,
         'email':emailController.text,
-        'phone':phoneController.text
+        'phone':phoneController.text,
+        'role':'USER'
       };
       newUserRef.set(userMap);
       Navigator.pushNamedAndRemoveUntil(context, MainPage.id, (route) => false);
